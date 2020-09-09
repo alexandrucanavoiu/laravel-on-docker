@@ -1,0 +1,50 @@
+version: "3.8"
+
+networks:
+  laravel:
+
+services:
+  php:
+    build: ./server/php
+    volumes:
+      - ./php-fpm-socket:/var/run/php-fpm
+      - ./storage:/storage
+    networks:
+      - laravel
+
+  webserver:
+    build: ./server/nginx
+    ports:
+      - 8080:80
+    volumes:
+      - ./php-fpm-socket:/var/run/php-fpm
+      - ./storage:/storage
+    depends_on:
+      - php
+    networks:
+      - laravel
+
+  mysql:
+    build: ./server/mysql
+    ports:
+      - 3307:3306
+    volumes:
+      - ./mysql:/var/lib/mysql
+    depends_on:
+        - php
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+        MYSQL_ROOT_PASSWORD: myrootpassword
+        MYSQL_DATABASE: laravel
+        MYSQL_USER: laravel
+        MYSQL_PASSWORD: laravelpassword
+    networks:
+      - laravel
+
+volumes:
+  php-fpm-socket:
+    driver: local
+  storage:
+    driver: local
+  mysql:
+    driver: local
